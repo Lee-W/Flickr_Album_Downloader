@@ -18,9 +18,9 @@ class FlickrAlbumDownloader:
 
     def parse_all_imgs(self):
         raw_html = self.__request_raw_html(self.url)
-        self.__parse_other_pages_url(raw_html)
         self.__parse_title_and_src(raw_html)
 
+        self.__parse_other_pages_url(raw_html)
         for url in self.other_pages_url:
             raw_html = self.__request_raw_html(url)
             self.__parse_title_and_src(raw_html)
@@ -40,16 +40,19 @@ class FlickrAlbumDownloader:
             # exist only one page
             self.other_pages_url = list()
 
+    # TODO: refactor
     def __parse_title_and_src(self, html):
         m = re.findall("Y.listData = {[\S\s]*try", html)
         listData = json.loads(m[0][13:-8])
         for rows in listData["rows"]:
             for row in rows["row"]:
                 self.albums.append({"full_name": row["full_name"],
-                                    "src": row["src"]})
+                                    "src": row["src"],
+                                    "file_extension": self.__match_file_extension(row["src"])})
 
-    def get_albums(self):
-        return self.albums
+    def __match_file_extension(self, src):
+        m = re.search("\.([a-zA-Z]*)$", src)
+        return m.groups()[0]
 
     def set_export_directory(self, path):
         if not path:
@@ -64,14 +67,17 @@ class FlickrAlbumDownloader:
 
         for img in self.albums:
             print("Download %s" % img["full_name"])
-
-            m = re.search("\.([a-zA-Z]*)$", img["src"])
-            file_extension = m.groups()[0]
-
-            self.__download(img["src"], path+"/"+img["full_name"]+file_extension)
+            self.__download(img["src"], path+"/"+img["full_name"]+"."+img["file_extension"])
 
     def __download(self, url, path):
         urllib.request.urlretrieve(url, path)
+
+    def get_albums(self):
+        return self.albums
+
+    def get_img_num(self):
+        return len(self.albums)
+
 
 
 if __name__ == '__main__':

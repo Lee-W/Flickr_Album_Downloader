@@ -56,18 +56,19 @@ class FlickrAlbumDownloader:
 
     def set_export_directory(self, path):
         if not path:
-            path = FlickrAlbumDownloader.DEFAULT_PATH
+            self.path = FlickrAlbumDownloader.DEFAULT_PATH
 
-        if not os.path.exists(path):
-            os.makedirs(path)
-            print("Create a directoty {}".format(path))
+        if not os.path.exists(self.path):
+            os.makedirs(self.path)
+            print("Create a directoty {}".format(self.path))
 
     def download_all_img(self, path=None):
         self.set_export_directory(path)
 
         for img in self.albums:
             print("Download %s" % img["full_name"])
-            self.__download(img["src"], path+"/"+img["full_name"]+"."+img["file_extension"])
+            full_file_name = img["full_name"]+"."+img["file_extension"]
+            self.__download(img["src"], self.path+"/"+full_file_name)
 
     def __download(self, url, path):
         urllib.request.urlretrieve(url, path)
@@ -77,7 +78,6 @@ class FlickrAlbumDownloader:
 
     def get_img_num(self):
         return len(self.albums)
-
 
 
 if __name__ == '__main__':

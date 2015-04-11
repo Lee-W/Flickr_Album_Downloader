@@ -6,7 +6,7 @@ import os
 from bs4 import BeautifulSoup
 
 
-class FlickAlbumDownloader:
+class FlickrAlbumDownloader:
     FLICKR_URL = "https://www.flickr.com"
 
     def __init__(self):
@@ -33,7 +33,7 @@ class FlickAlbumDownloader:
 
         soup = BeautifulSoup(html)
         for a in soup.find('span', {'class': 'pages'}).find_all('a', href=True):
-            self.other_pages_url.append(FlickAlbumDownloader.FLICKR_URL+a["href"])
+            self.other_pages_url.append(FlickrAlbumDownloader.FLICKR_URL+a["href"])
 
     def __parse_title_and_src(self, html):
         m = re.findall("Y.listData = {[\S\s]*try", html)
@@ -64,8 +64,8 @@ class FlickAlbumDownloader:
 
 if __name__ == '__main__':
     url = input("Please input url of your flickr album: ")
-    f = FlickAlbumDownloader()
-    f.set_URL("url")
+    f = FlickrAlbumDownloader()
+    f.set_URL(url)
     f.parse_all_imgs()
     f.download_all_img()
     print("Finish")

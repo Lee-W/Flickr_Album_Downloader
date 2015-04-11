@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 
 class FlickrAlbumDownloader:
     FLICKR_URL = "https://www.flickr.com"
+    DEFAULT_PATH = "./download_img"
 
     def __init__(self):
         self.albums = list()
@@ -31,9 +32,13 @@ class FlickrAlbumDownloader:
     def __parse_other_pages_url(self, html):
         self.other_pages_url = list()
 
-        soup = BeautifulSoup(html)
-        for a in soup.find('span', {'class': 'pages'}).find_all('a', href=True):
-            self.other_pages_url.append(FlickrAlbumDownloader.FLICKR_URL+a["href"])
+        try:
+            soup = BeautifulSoup(html)
+            for a in soup.find('span', {'class': 'pages'}).find_all('a', href=True):
+                self.other_pages_url.append(FlickrAlbumDownloader.FLICKR_URL+a["href"])
+        except Exception:
+            # exist only one page
+            self.other_pages_url = list()
 
     def __parse_title_and_src(self, html):
         m = re.findall("Y.listData = {[\S\s]*try", html)
@@ -47,16 +52,23 @@ class FlickrAlbumDownloader:
         return self.albums
 
     def set_export_directory(self, path):
+        if not path:
+            path = FlickrAlbumDownloader.DEFAULT_PATH
+
         if not os.path.exists(path):
             os.makedirs(path)
             print("Create a directoty {}".format(path))
 
-    def download_all_img(self, path="./download_img"):
+    def download_all_img(self, path=None):
         self.set_export_directory(path)
 
         for img in self.albums:
             print("Download %s" % img["full_name"])
-            self.__download(img["src"], path+"/"+img["full_name"]+".jpg")
+
+            m = re.search("\.([a-zA-Z]*)$", img["src"])
+            file_extension = m.groups()[0]
+
+            self.__download(img["src"], path+"/"+img["full_name"]+file_extension)
 
     def __download(self, url, path):
         urllib.request.urlretrieve(url, path)

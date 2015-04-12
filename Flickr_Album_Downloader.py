@@ -1,8 +1,8 @@
 import requests
 import re
 import json
-import urllib
 import os
+import wget
 from bs4 import BeautifulSoup
 
 
@@ -72,7 +72,7 @@ class FlickrAlbumDownloader:
             self.__download(img["url"], self.path+"/"+full_file_name)
 
     def __download(self, url, path):
-        urllib.request.urlretrieve(url, path)
+        wget.download(url, path)
 
     def get_albums(self):
         return self.albums

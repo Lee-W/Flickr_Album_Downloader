@@ -66,13 +66,14 @@ class FlickrAlbumDownloader:
     def download_all_img(self, path=None):
         self.set_export_directory(path)
 
-        for img in self.albums:
-            print("Download %s" % img["full_name"])
+        for index, img in enumerate(self.albums):
+            print("%d/%d Download %s" % (index+1, len(self.albums), img["full_name"]))
             full_file_name = img["full_name"]+"."+img["file_extension"]
             self.__download(img["url"], self.path+"/"+full_file_name)
 
     def __download(self, url, path):
         wget.download(url, path)
+        print()
 
     def get_albums(self):
         return self.albums

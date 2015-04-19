@@ -42,11 +42,23 @@ class FlickrAlbumDownloader:
 
     # TODO: refactor
     def __parse_title_and_url(self, html):
-        m = re.findall("Y.listData = {[\S\s]*try", html)
-        listData = json.loads(m[0][13:-8])
+        m = re.search(r"Y.listData = (?P<img_infos>{[\S\s]*?});", html)
+        listData = json.loads(m.group("img_infos"))
         for rows in listData["rows"]:
             for row in rows["row"]:
-                origin_size_url = row["sizes"]["o"]["url"]
+
+                if 'o' in row["sizes"]:
+                    image_size = 'o'
+                elif 'l' in row["sizes"]:
+                    image_size = 'l'
+                elif 'm' in row["sizes"]:
+                    image_size = 'm'
+                elif 's' in row["sizes"]:
+                    image_size = 's'
+                else:
+                    print('Error: No image file.')
+                
+                origin_size_url = row["sizes"][image_size]["url"]
                 self.albums.append({"full_name": row["full_name"],
                                     "url": origin_size_url,
                                     "file_extension": self.__match_file_extension(origin_size_url)})

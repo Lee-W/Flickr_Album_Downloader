@@ -3,6 +3,7 @@ import re
 import json
 import os
 import wget
+from urllib import ContentTooShortError
 from bs4 import BeautifulSoup
 
 
@@ -78,10 +79,16 @@ class FlickrAlbumDownloader:
     def download_all_img(self, path=None):
         self.set_export_directory(path)
 
+        self.fail_imgs = list()
         for index, img in enumerate(self.albums):
             print("%d/%d Download %s" % (index+1, len(self.albums), img["full_name"]))
+
             full_file_name = img["full_name"]+"."+img["file_extension"]
-            self.__download(img["url"], self.path+"/"+full_file_name)
+            try:
+                self.__download(img["url"], self.path+"/"+full_file_name)
+            except ContentTooShortError:
+                print("Cannot download "+full_file_name+"  "+img["url"])
+                self.fail_imgs.append({"name": img["full_name"], "url": img["url"]})
 
     def __download(self, url, path):
         wget.download(url, path)
@@ -93,6 +100,9 @@ class FlickrAlbumDownloader:
     def get_img_num(self):
         return len(self.albums)
 
+    def get_fail_imgs(self):
+        return self.fail_imgs
+
 
 if __name__ == '__main__':
     url = input("Please input url of your flickr album: ")
@@ -103,3 +113,7 @@ if __name__ == '__main__':
     f.parse_all_imgs()
     f.download_all_img()
     print("Finish")
+
+    print("Fail to download images below.")
+    for f in f.get_fail_imgs():
+        print(f["full_name"], f["url"])

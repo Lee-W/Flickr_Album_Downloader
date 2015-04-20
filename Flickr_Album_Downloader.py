@@ -84,8 +84,10 @@ class FlickrAlbumDownloader:
 
 if __name__ == '__main__':
     url = input("Please input url of your flickr album: ")
+    path = input("Input save path")
     f = FlickrAlbumDownloader()
     f.set_URL(url)
+    f.set_export_directory(path)
     f.parse_all_imgs()
     f.download_all_img()
     print("Finish")

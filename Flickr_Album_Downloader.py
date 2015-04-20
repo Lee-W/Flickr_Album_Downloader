@@ -40,7 +40,6 @@ class FlickrAlbumDownloader:
             # exist only one page
             self.other_pages_url = list()
 
-    # TODO: refactor
     def __parse_title_and_url(self, html):
         m = re.search(r"Y.listData = (?P<img_infos>{[\S\s]*?});", html)
         listData = json.loads(m.group("img_infos"))
@@ -57,7 +56,8 @@ class FlickrAlbumDownloader:
                     image_size = 's'
                 else:
                     print('Error: No image file.')
-                
+                    continue
+
                 origin_size_url = row["sizes"][image_size]["url"]
                 self.albums.append({"full_name": row["full_name"],
                                     "url": origin_size_url,

@@ -80,8 +80,10 @@ class FlickrAlbumDownloader:
             print("Create a directoty {}".format(self.path))
 
     def download_all_img(self, path=None, reporthook=None):
-        if path:
-            self.set_export_directory(path)
+        # if path:
+            # self.set_export_directory(path)
+        # else:
+        self.set_export_directory(path)
 
         if not reporthook:
             reporthook = FlickrAlbumDownloader.__reporthook
@@ -100,8 +102,12 @@ class FlickrAlbumDownloader:
                 self.fail_imgs.append({"name": img["full_name"], "url": img["url"]})
                 self.is_success_download = False
 
+    # TODO: option to overwrite duplicate file
     def __download(self, url, path, reporthook):
-        urlretrieve(url, path, reporthook=reporthook)
+        if not os.path.exists(path):
+            urlretrieve(url, path, reporthook=reporthook)
+        else:
+            print("File Exist")
 
     @staticmethod
     def __reporthook(block_num, block_size, total_size):

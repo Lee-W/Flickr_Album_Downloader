@@ -2,7 +2,8 @@ import requests
 import re
 import json
 import os
-import wget
+import sys
+from urllib.request import urlretrieve
 from urllib.error import ContentTooShortError
 from bs4 import BeautifulSoup
 
@@ -78,8 +79,12 @@ class FlickrAlbumDownloader:
             os.makedirs(self.path)
             print("Create a directoty {}".format(self.path))
 
-    def download_all_img(self, path=None):
-        self.set_export_directory(path)
+    def download_all_img(self, path=None, reporthook=None):
+        if path:
+            self.set_export_directory(path)
+
+        if not reporthook:
+            reporthook = FlickrAlbumDownloader.__reporthook
 
         self.is_success_download = True
         self.fail_imgs = list()
@@ -87,16 +92,33 @@ class FlickrAlbumDownloader:
             print("%d/%d Download %s" % (index+1, len(self.albums), img["full_name"]))
 
             full_file_name = img["full_name"]+"."+img["file_extension"]
+            full_path = self.path+"/"+full_file_name
             try:
-                self.__download(img["url"], self.path+"/"+full_file_name)
+                self.__download(img["url"], full_path, reporthook)
             except ContentTooShortError:
                 print("Cannot download "+full_file_name+"  "+img["url"])
                 self.fail_imgs.append({"name": img["full_name"], "url": img["url"]})
                 self.is_success_download = False
 
-    def __download(self, url, path):
-        wget.download(url, path)
-        print()
+    def __download(self, url, path, reporthook):
+        urlretrieve(url, path, reporthook=reporthook)
+
+    @staticmethod
+    def __reporthook(block_num, block_size, total_size):
+        current_progress = block_num * block_size
+
+        if total_size > 0:
+            try:
+                percent = min((current_progress*100)/total_size, 100)
+            except Exception:
+                percent = 100
+
+            s = "\r%5.1f%% %*d/%d" % (percent, len(str(total_size)), current_progress, total_size)
+            sys.stderr.write(s)
+            if current_progress > total_size:
+                sys.stderr.write("\n")
+        else:
+            sys.stderr.write("Read %d\n" % (current_progress,))
 
     def get_albums(self):
         return self.albums
@@ -107,17 +129,18 @@ class FlickrAlbumDownloader:
     def get_fail_imgs(self):
         return self.fail_imgs
 
+
 if __name__ == '__main__':
     url = input("Please input url of your flickr album: ")
     path = input("Input save path: ")
+
     f = FlickrAlbumDownloader()
     f.set_URL(url)
-    f.set_export_directory(path)
     f.parse_all_imgs()
-    f.download_all_img()
+    f.download_all_img(path)
     print("Finish")
 
-    if f.is_success_download:
+    if not f.is_success_download:
         print("Fail to download images below.")
         for f in f.get_fail_imgs():
             print(f["full_name"], f["url"])

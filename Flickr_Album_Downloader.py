@@ -69,45 +69,32 @@ class FlickrAlbumDownloader:
         m = re.search("\.([a-zA-Z]*)$", url)
         return m.groups()[0]
 
-    def set_export_directory(self, path):
-        if not path:
-            self.path = FlickrAlbumDownloader.DEFAULT_PATH
-        else:
+    def set_export_directory(self, path=None):
+        if path:
             self.path = path
+        else:
+            self.path = FlickrAlbumDownloader.DEFAULT_PATH
 
         if not os.path.exists(self.path):
             os.makedirs(self.path)
             print("Create a directoty {}".format(self.path))
 
-    def download_all_img(self, path=None, reporthook=None):
-        # if path:
-            # self.set_export_directory(path)
-        # else:
-        self.set_export_directory(path)
-
+    def download_all_img(self, reporthook=None):
         if not reporthook:
             reporthook = FlickrAlbumDownloader.__reporthook
 
         self.is_success_download = True
         self.fail_imgs = list()
         for index, img in enumerate(self.albums):
-            print("%d/%d Download %s" % (index+1, len(self.albums), img["full_name"]))
-
-            full_file_name = img["full_name"]+"."+img["file_extension"]
-            full_path = self.path+"/"+full_file_name
             try:
+                print("%d/%d Download %s" % (index+1, len(self.albums), img["full_name"]))
+
+                full_file_name = img["full_name"]+"."+img["file_extension"]
+                full_path = self.path+"/"+full_file_name
                 self.__download(img["url"], full_path, reporthook)
             except ContentTooShortError:
-                print("Cannot download "+full_file_name+"  "+img["url"])
                 self.fail_imgs.append({"name": img["full_name"], "url": img["url"]})
                 self.is_success_download = False
-
-    # TODO: option to overwrite duplicate file
-    def __download(self, url, path, reporthook):
-        if not os.path.exists(path):
-            urlretrieve(url, path, reporthook=reporthook)
-        else:
-            print("File Exist")
 
     @staticmethod
     def __reporthook(block_num, block_size, total_size):
@@ -126,6 +113,13 @@ class FlickrAlbumDownloader:
         else:
             sys.stderr.write("Read %d\n" % (current_progress,))
 
+    # TODO: option to overwrite duplicate file
+    def __download(self, url, path, reporthook):
+        if not os.path.exists(path):
+            urlretrieve(url, path, reporthook=reporthook)
+        else:
+            print("File Exist")
+
     def get_albums(self):
         return self.albums
 
@@ -143,7 +137,8 @@ if __name__ == '__main__':
     f = FlickrAlbumDownloader()
     f.set_URL(url)
     f.parse_all_imgs()
-    f.download_all_img(path)
+    f.set_export_directory(path)
+    f.download_all_img()
     print("Finish")
 
     if not f.is_success_download:

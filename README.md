@@ -1,8 +1,9 @@
 # Flickr Album Downloader
 Download all the image in flickr albums of a given url
+***It could only download a limited number of pictures***
 
 # Requirements
-beautifulsoup4, requests
+requests
 ```sh
 pip3 install -r requirements.txt
 ```

@@ -5,10 +5,9 @@ import os
 import sys
 from urllib.request import urlretrieve
 from urllib.error import ContentTooShortError
-# from bs4 import BeautifulSoup
 
 
-class FlickrAlbumDownloader:
+class FlickrAlbumDownloader(object):
     FLICKR_URL = "https://www.flickr.com"
     DEFAULT_PATH = "./download_img"
 

@@ -1,83 +1,55 @@
-import requests
-import re
 import json
+import re
 import os
 import sys
 from urllib.request import urlretrieve
-from urllib.error import ContentTooShortError
+from urllib.parse import urlparse
+
+import flickrapi
 
 
 class FlickrAlbumDownloader(object):
-    FLICKR_URL = "https://www.flickr.com"
     DEFAULT_PATH = "./download_img"
 
-    def __init__(self):
-        self.albums = list()
-
-    def set_URL(self, url):
-        self.album_url = url
-
-    def parse_all_imgs(self):
-        raw_html = self.__request_raw_html(self.album_url)
-        self.__parse_title_and_url(raw_html)
-
-    def __request_raw_html(self, url):
-        req = requests.get(url)
-        return req.text
-
-    def __parse_title_and_url(self, html):
-        m = re.findall(r"\"_data\"\S*\"fetchedStart\"", html)
-        listData = json.loads(m[0][8:-15])
-        for picInfo in listData:
-            if 'o' in picInfo["sizes"]:
-                image_size = 'o'
-            elif 'l' in picInfo["sizes"]:
-                image_size = 'l'
-            elif 'm' in picInfo["sizes"]:
-                image_size = 'm'
-            elif 's' in picInfo["sizes"]:
-                image_size = 's'
-            else:
-                print('Error: No image file.')
-                continue
-
-            origin_size_url = picInfo["sizes"][image_size]["url"]
-            self.albums.append(
-                {"full_name": picInfo["title"], "url": "https:"+origin_size_url,
-                 "file_extension":
-                 self.__match_file_extension(origin_size_url)})
-
-    def __match_file_extension(self, url):
-        m = re.search("\.([a-zA-Z]*)$", url)
-        return m.groups()[0]
+    def __init__(self, key, secret):
+        self._flickr = flickrapi.FlickrAPI(key, secret)
+        self.album = list()
 
     def set_export_directory(self, path=None):
         if path:
-            self.path = path
+            self._path = path
         else:
-            self.path = FlickrAlbumDownloader.DEFAULT_PATH
+            self._path = FlickrAlbumDownloader.DEFAULT_PATH
 
-        if not os.path.exists(self.path):
-            os.makedirs(self.path)
-            print("Create a directoty {}".format(self.path))
+        if not os.path.exists(self._path):
+            os.makedirs(self._path)
+            print("Create a directoty {}".format(self._path))
 
-    def download_all_img(self, reporthook=None):
+    def download_album(self, album_id, reporthook=None):
         if not reporthook:
             reporthook = FlickrAlbumDownloader.__reporthook
 
-        self.is_success_download = True
-        self.fail_imgs = list()
-        for index, img in enumerate(self.albums):
-            try:
-                print("%d/%d Download %s" %
-                      (index+1, len(self.albums), img["full_name"]))
+        self.__get_album_list(album_id)
+        for index, photo in enumerate(self.album):
+            photo_id = photo['id']
+            title = photo['title']
 
-                full_file_name = img["full_name"]+"."+img["file_extension"]
-                full_path = self.path+"/"+full_file_name
-                self.__download(img["url"], full_path, reporthook)
-            except ContentTooShortError:
-                self.fail_imgs.append({"name": img["full_name"], "url": img["url"]})
-                self.is_success_download = False
+            try:
+                photo_size_info = self._flickr.photos.getSizes(photo_id=photo_id,
+                                                               format='json')
+            except KeyboardInterrupt:
+                print("Terminated by User")
+            else:
+                photo_size_info = json.loads(photo_size_info.decode('utf-8'))
+
+                url = photo_size_info['sizes']['size'][-1]['source']
+                file_extension = FlickrAlbumDownloader.__match_file_extension(url)
+                full_path = os.path.join(self._path, title + "." + file_extension)
+
+                self.__download(url, full_path, reporthook)
+
+                print("%d/%d - %s Downloaded \n" %
+                      (index+1, len(self.album), title))
 
     @staticmethod
     def __reporthook(block_num, block_size, total_size):
@@ -99,6 +71,16 @@ class FlickrAlbumDownloader(object):
         else:
             sys.stderr.write("Read %d\n" % (current_progress,))
 
+    def __get_album_list(self, album_id):
+        self.album = list()
+        for photo in self._flickr.walk_set(album_id):
+            self.album.append(dict(photo.items()))
+
+    @staticmethod
+    def __match_file_extension(url):
+        m = re.search("\.([a-zA-Z]*)$", url)
+        return m.groups()[0]
+
     # TODO: option to overwrite duplicate file
     def __download(self, url, path, reporthook):
         if not os.path.exists(path):
@@ -106,28 +88,20 @@ class FlickrAlbumDownloader(object):
         else:
             print("File Exist")
 
-    def get_albums(self):
-        return self.albums
 
-    def get_img_num(self):
-        return len(self.albums)
+def main():
+    try:
+        key = input("Please input API Key: ")
+        secret = input("Please input API secret: ")
+        album_url = input("Please input album url: ")
+    except KeyboardInterrupt:
+        print("Terminated by user")
+    else:
+        album_id = urlparse(album_url).path.split("/")[4]
 
-    def get_fail_imgs(self):
-        return self.fail_imgs
-
+        fad = FlickrAlbumDownloader(key, secret)
+        fad.set_export_directory()
+        fad.download_album(album_id)
 
 if __name__ == '__main__':
-    album_url = input("Please input url of your flickr album: ")
-    path = input("Input save path: ")
-
-    f = FlickrAlbumDownloader()
-    f.set_URL(album_url)
-    f.parse_all_imgs()
-    f.set_export_directory(path)
-    f.download_all_img()
-    print("Finish")
-
-    if not f.is_success_download:
-        print("Fail to download images below.")
-        for f in f.get_fail_imgs():
-            print(f["full_name"], f["url"])
+    main()

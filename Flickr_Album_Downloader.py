@@ -46,10 +46,13 @@ class FlickrAlbumDownloader(object):
                 file_extension = FlickrAlbumDownloader.__match_file_extension(url)
                 full_path = os.path.join(self._path, title + "." + file_extension)
 
-                self.__download(url, full_path, reporthook)
-
-                print("%d/%d - %s Downloaded \n" %
-                      (index+1, len(self.album), title))
+                try:
+                    self.__download(url, full_path, reporthook)
+                except FileExistsError:
+                    print("%s Exist" % title)
+                else:
+                    print("%d/%d - %s Downloaded \n" %
+                          (index+1, len(self.album), title))
 
     @staticmethod
     def __reporthook(block_num, block_size, total_size):
@@ -86,20 +89,25 @@ class FlickrAlbumDownloader(object):
         if not os.path.exists(path):
             urlretrieve(url, path, reporthook=reporthook)
         else:
-            print("File Exist")
+            raise FileExistsError
+
+
+def load_API_info(API_path):
+    with open(API_path) as f:
+        return json.load(f)
 
 
 def main():
+    API_path = input("Please input path to load API key and secret: ") or "API.json"
+    API_info = load_API_info(API_path)
     try:
-        key = input("Please input API Key: ")
-        secret = input("Please input API secret: ")
         album_url = input("Please input album url: ")
     except KeyboardInterrupt:
         print("Terminated by user")
     else:
         album_id = urlparse(album_url).path.split("/")[4]
 
-        fad = FlickrAlbumDownloader(key, secret)
+        fad = FlickrAlbumDownloader(API_info['key'], API_info['secret'])
         fad.set_export_directory()
         fad.download_album(album_id)
 

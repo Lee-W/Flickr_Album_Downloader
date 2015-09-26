@@ -99,3 +99,4 @@ target/
 download_img/
 *.jpg
 *.png
+API.json

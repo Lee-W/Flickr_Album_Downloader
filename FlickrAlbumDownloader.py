@@ -46,10 +46,13 @@ class FlickrAlbumDownloader(object):
                 file_extension = FlickrAlbumDownloader.__match_file_extension(url)
                 full_path = os.path.join(self._path, title + "." + file_extension)
 
-                self.__download(url, full_path, reporthook)
-
-                print("%d/%d - %s Downloaded \n" %
-                      (index+1, len(self.album), title))
+                try:
+                    self.__download(url, full_path, reporthook)
+                except FileExistsError:
+                    print("%s Exist" % title)
+                else:
+                    print("%d/%d - %s Downloaded \n" %
+                          (index+1, len(self.album), title))
 
     @staticmethod
     def __reporthook(block_num, block_size, total_size):
@@ -86,7 +89,7 @@ class FlickrAlbumDownloader(object):
         if not os.path.exists(path):
             urlretrieve(url, path, reporthook=reporthook)
         else:
-            print("File Exist")
+            raise FileExistsError
 
 
 def load_API_info(API_path):

@@ -95,7 +95,7 @@ def load_API_info(API_path):
 
 
 def main():
-    API_path = input("Please input path to load API key and secret: ")
+    API_path = input("Please input path to load API key and secret: ") or "API.json"
     API_info = load_API_info(API_path)
     try:
         album_url = input("Please input album url: ")

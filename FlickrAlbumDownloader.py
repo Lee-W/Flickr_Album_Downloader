@@ -89,17 +89,22 @@ class FlickrAlbumDownloader(object):
             print("File Exist")
 
 
+def load_API_info(API_path):
+    with open(API_path) as f:
+        return json.load(f)
+
+
 def main():
+    API_path = input("Please input path to load API key and secret: ")
+    API_info = load_API_info(API_path)
     try:
-        key = input("Please input API Key: ")
-        secret = input("Please input API secret: ")
         album_url = input("Please input album url: ")
     except KeyboardInterrupt:
         print("Terminated by user")
     else:
         album_id = urlparse(album_url).path.split("/")[4]
 
-        fad = FlickrAlbumDownloader(key, secret)
+        fad = FlickrAlbumDownloader(API_info['key'], API_info['secret'])
         fad.set_export_directory()
         fad.download_album(album_id)
 

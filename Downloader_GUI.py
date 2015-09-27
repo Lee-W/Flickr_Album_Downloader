@@ -46,7 +46,7 @@ class DownloaderGUI(Frame):
         self.secret_label.grid(row=1, column=0)
         self.secret_field.grid(row=1, column=1)
         self.enter_btn.grid(row=2, column=0)
-        self.api_link.grid(row=3, column=0)
+        self.api_link.grid(row=2, column=1)
 
     def __link_callback(self, event):
         webbrowser.open_new(DownloaderGUI.FLICKR_API_INFO_URL)
@@ -76,7 +76,8 @@ class DownloaderGUI(Frame):
 
         if directory:
             self.downloader.set_export_directory(directory)
-            self.downloader.download_album(self.url_field.get())
+            album_id = FlickrAlbumDownloader.parse_id_from_url(self.url_field.get())
+            self.downloader.download_album(album_id)
 
         self.msg_label.text = "Successfully Downloaded"
         self.msg_label.grid(row=4, column=0)

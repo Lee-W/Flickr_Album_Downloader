@@ -6,6 +6,7 @@ from urllib.request import urlretrieve
 from urllib.parse import urlparse
 
 import flickrapi
+from flickrapi.exceptions import FlickrError
 
 
 class FlickrAlbumDownloader(object):
@@ -14,6 +15,10 @@ class FlickrAlbumDownloader(object):
     def __init__(self, key, secret):
         self._flickr = flickrapi.FlickrAPI(key, secret)
         self.album = list()
+        self.__check_api_key()
+
+    def __check_api_key(self):
+        self._flickr.test.null()
 
     def set_export_directory(self, path=None):
         if path:
@@ -100,14 +105,18 @@ def load_API_info(API_path):
 def main():
     API_path = input("Please input path to load API key and secret: ") or "API.json"
     API_info = load_API_info(API_path)
+
     try:
+        fad = FlickrAlbumDownloader(API_info['key'], API_info['secret'])
+
         album_url = input("Please input album url: ")
+    except FlickrError:
+        print("Flickr API Key Error")
     except KeyboardInterrupt:
         print("Terminated by user")
     else:
         album_id = urlparse(album_url).path.split("/")[4]
 
-        fad = FlickrAlbumDownloader(API_info['key'], API_info['secret'])
         fad.set_export_directory()
         fad.download_album(album_id)
 

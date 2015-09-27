@@ -96,7 +96,7 @@ class DownloaderGUI(Frame):
         try:
             self.downloader = FlickrAlbumDownloader(self.key_field.get(), self.secret_field.get())
         except FlickrError:
-            self.msg_label.text = "API Key Error"
+            self.msg_label["text"] = "API Key Error"
             self.msg_label.grid(row=3, column=0)
         else:
             self.__hide_enter_api_widgets()
@@ -116,7 +116,8 @@ class DownloaderGUI(Frame):
         self.downloader = FlickrAlbumDownloader(api_info['key'], api_info['secret'])
 
     def __remove_api_info(self):
-        os.remove(DownloaderGUI.API_INFO_NAME)
+        if os.path.isfile(DownloaderGUI.API_INFO_NAME):
+            os.remove(DownloaderGUI.API_INFO_NAME)
 
     def __download_method(self):
         directory = askdirectory(parent=self.master,
@@ -127,7 +128,7 @@ class DownloaderGUI(Frame):
             album_id = FlickrAlbumDownloader.parse_id_from_url(self.url_field.get())
             self.downloader.download_album(album_id)
 
-        self.msg_label.text = "Successfully Downloaded"
+        self.msg_label["text"] = "Successfully Downloaded"
         self.msg_label.grid(row=4, column=0)
 
     def __reset_api_info_method(self):

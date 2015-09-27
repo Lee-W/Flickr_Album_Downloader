@@ -96,6 +96,10 @@ class FlickrAlbumDownloader(object):
         else:
             raise FileExistsError
 
+    @staticmethod
+    def parse_id_from_url(album_url):
+        return urlparse(album_url).path.split("/")[4]
+
 
 def load_API_info(API_path):
     with open(API_path) as f:
@@ -115,8 +119,7 @@ def main():
     except KeyboardInterrupt:
         print("Terminated by user")
     else:
-        album_id = urlparse(album_url).path.split("/")[4]
-
+        album_id = FlickrAlbumDownloader.parse_id_from_url(album_url)
         fad.set_export_directory()
         fad.download_album(album_id)
 

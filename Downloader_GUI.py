@@ -1,4 +1,6 @@
+import os
 import webbrowser
+import pickle
 from tkinter import Tk
 from tkinter import Label
 from tkinter import Button
@@ -15,6 +17,7 @@ from Flickr_Album_Downloader import FlickrAlbumDownloader
 
 class DownloaderGUI(Frame):
     FLICKR_API_INFO_URL = "https://www.flickr.com/services/api/keys/"
+    API_INFO_NAME = ".api.pkl"
 
     def __init__(self, master=None):
         self.to_remember = IntVar()
@@ -28,7 +31,11 @@ class DownloaderGUI(Frame):
         self.__create_enter_api_widgets()
         self.__create_download_widgets()
 
-        self.__place_enter_api_widgets()
+        if os.path.isfile(DownloaderGUI.API_INFO_NAME):
+            self.__load_api_info()
+            self.__place_download_widgets()
+        else:
+            self.__place_enter_api_widgets()
 
     def __create_enter_api_widgets(self):
         self.key_label = Label(self, text="API Key")
@@ -95,6 +102,22 @@ class DownloaderGUI(Frame):
             self.__hide_enter_api_widgets()
             self.__place_download_widgets()
 
+            if self.to_remember.get():
+                self.__save_api_info()
+
+    def __save_api_info(self):
+        api_info = {"key": self.key_field.get(), "secret": self.secret_field.get()}
+        with open(DownloaderGUI.API_INFO_NAME, "wb") as f:
+            pickle.dump(api_info, f)
+
+    def __load_api_info(self):
+        with open(DownloaderGUI.API_INFO_NAME, "rb") as f:
+            api_info = pickle.load(f)
+        self.downloader = FlickrAlbumDownloader(api_info['key'], api_info['secret'])
+
+    def __remove_api_info(self):
+        os.remove(DownloaderGUI.API_INFO_NAME)
+
     def __download_method(self):
         directory = askdirectory(parent=self.master,
                                  initialdir=".")
@@ -108,12 +131,14 @@ class DownloaderGUI(Frame):
         self.msg_label.grid(row=4, column=0)
 
     def __reset_api_info_method(self):
+        self.__remove_api_info()
         self.__hide_download_widgets()
         self.__place_enter_api_widgets()
 
         self.key_field.text = ""
         self.secret_field.text = ""
         self.to_remember.set(0)
+
 
 if __name__ == '__main__':
     root = Tk()

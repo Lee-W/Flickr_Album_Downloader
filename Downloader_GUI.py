@@ -68,10 +68,10 @@ class DownloaderGUI(Frame):
         self.api_link.grid(row=3, column=1)
 
     def __place_download_widgets(self):
-        self.url_label.grid(row=2, column=0)
-        self.url_field.grid(row=2, column=1)
-        self.download_btn.grid(row=3, column=0)
-        self.reset_api_btn.grid(row=3, column=1)
+        self.url_label.grid(row=0, column=0)
+        self.url_field.grid(row=0, column=1)
+        self.download_btn.grid(row=1, column=0)
+        self.reset_api_btn.grid(row=1, column=1)
 
     def __hide_enter_api_widgets(self):
         self.key_label.grid_remove()

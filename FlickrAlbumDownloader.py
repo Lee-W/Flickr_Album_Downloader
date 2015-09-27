@@ -18,7 +18,7 @@ class FlickrAlbumDownloader(object):
         self.__check_api_key()
 
     def __check_api_key(self):
-        self._flickr.test.null()
+        self._flickr.test.echo()
 
     def set_export_directory(self, path=None):
         if path:

@@ -30,11 +30,12 @@ class FlickrAlbumDownloader(object):
             os.makedirs(self._path)
             print("Create a directoty {}".format(self._path))
 
-    def download_album(self, album_id, reporthook=None):
+    def download_album(self, album_id, reporthook=None, callback=None):
         if not reporthook:
             reporthook = FlickrAlbumDownloader.__reporthook
 
         self.__get_album_list(album_id)
+        photo_num = len(self.album)
         for index, photo in enumerate(self.album):
             photo_id = photo['id']
             title = photo['title']
@@ -58,6 +59,9 @@ class FlickrAlbumDownloader(object):
                 else:
                     print("%d/%d - %s Downloaded \n" %
                           (index+1, len(self.album), title))
+
+                    if callback:
+                        callback(title, index+1, photo_num)
 
     @staticmethod
     def __reporthook(block_num, block_size, total_size):

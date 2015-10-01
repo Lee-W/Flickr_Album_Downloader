@@ -100,3 +100,4 @@ download_img/
 *.jpg
 *.png
 API.json
+.api.pkl

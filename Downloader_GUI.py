@@ -1,6 +1,7 @@
 import os
 import webbrowser
 import pickle
+from threading import Thread
 from tkinter import Tk
 from tkinter import Label
 from tkinter import Button
@@ -123,13 +124,22 @@ class DownloaderGUI(Frame):
         directory = askdirectory(parent=self.master,
                                  initialdir=".")
 
-        if directory:
-            self.downloader.set_export_directory(directory)
-            album_id = FlickrAlbumDownloader.parse_id_from_url(self.url_field.get())
-            self.downloader.download_album(album_id)
+        path = str(directory)
+        if path:
+            Thread(target=self.__download_thread, args=(path, ), name="download_thread").start()
 
         self.msg_label["text"] = "Successfully Downloaded"
         self.msg_label.grid(row=4, column=0)
+
+    def __download_thread(self, path):
+        self.downloader.set_export_directory(path)
+        album_id = FlickrAlbumDownloader.parse_id_from_url(self.url_field.get())
+        self.downloader.download_album(album_id, callback=self.__download_callback)
+
+    def __download_callback(self, index, photo_num):
+        self.msg_label["text"] = "%s / %s" % (index, photo_num)
+        self.msg_label.grid(row=4, column=0)
+
 
     def __reset_api_info_method(self):
         self.__remove_api_info()

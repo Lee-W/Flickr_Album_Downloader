@@ -28,6 +28,7 @@ class DownloaderGUI(Frame):
         self.grid(columnspan=2000)
 
         self.msg_label = Label(self)
+        self.progress_label = Label(self)
 
         self.__create_enter_api_widgets()
         self.__create_download_widgets()
@@ -128,17 +129,22 @@ class DownloaderGUI(Frame):
         if path:
             Thread(target=self.__download_thread, args=(path, ), name="download_thread").start()
 
-        self.msg_label["text"] = "Successfully Downloaded"
+        self.msg_label["text"] = "Download Progress"
         self.msg_label.grid(row=4, column=0)
+        self.progress_label["text"] = "0"
+        self.progress_label.grid(row=4, column=1)
 
     def __download_thread(self, path):
         self.downloader.set_export_directory(path)
         album_id = FlickrAlbumDownloader.parse_id_from_url(self.url_field.get())
         self.downloader.download_album(album_id, callback=self.__download_callback)
 
-    def __download_callback(self, index, photo_num):
-        self.msg_label["text"] = "%s / %s" % (index, photo_num)
-        self.msg_label.grid(row=4, column=0)
+    def __download_callback(self, title, counter, photo_num):
+        self.progress_label["text"] = "%s / %s" % (counter, photo_num)
+
+        if counter is photo_num:
+            self.progress_label.grid_remove()
+            self.msg_label["text"] = "Download Finished"
 
 
     def __reset_api_info_method(self):
